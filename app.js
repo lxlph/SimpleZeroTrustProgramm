@@ -112,14 +112,13 @@ app.get('/', function(req, res){
 // app.listen('3000', ()=>{
 //     console.log('App running on 3000');
 // });
-https.createServer({
+
+var options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('./cert/ca-crt.pem'),
-    // Requesting the client to provide a certificate, to authenticate the user.
     requestCert: true,
-    // As specified as "true", so no unauthenticated traffic
-    // will make it to the specified route specified
     rejectUnauthorized: true
-}, app)
-    .listen(3000);
+};
+https.createServer(options,app).listen(3000);
+
