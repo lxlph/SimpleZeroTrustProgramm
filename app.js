@@ -120,5 +120,12 @@ var options = {
     requestCert: true,
     rejectUnauthorized: true
 };
-https.createServer(options,app).listen(3000);
+https.createServer(options, function (req, res) {
+    console.log(new Date()+' '+
+        req.connection.remoteAddress+' '+
+        req.socket.getPeerCertificate().subject.CN+' '+
+        req.method+' '+req.url);
+    res.writeHead(200);
+    res.end("hello world\n");
+}, app).listen(3000);
 
