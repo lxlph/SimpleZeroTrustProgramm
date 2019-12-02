@@ -1,2 +1,2 @@
-# 2fa-demo
-Demo application implementing two-factor authentication using node.js and vue.js in a stateless application
+# SimpleZeroTrustProgramm
+>>>>>>> 037b84d30e4d4148bac478b876ece04bfd919064
