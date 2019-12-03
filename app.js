@@ -6,7 +6,7 @@ var speakeasy = require('speakeasy');
 var QRCode = require('qrcode');
 const path = require('path');
 var fs = require('fs');
-var clientCertificateAuth = require('client-certificate-auth');
+// var clientCertificateAuth = require('client-certificate-auth');
 
 app.use(bodyParser.json());
 
@@ -24,6 +24,10 @@ function getIdByEmail (email){
     });
     return id;
 }
+
+app.get('/client', function(req, res) {
+    res.sendFile(__dirname + '/client.html');
+});
 
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
@@ -103,14 +107,20 @@ app.post('/twofactor/verify', function(req, res){
     return res.status(400).send('Invalid token, verification failed');
 });
 
-// //EXPL: Front-end app
-// app.get('/', function(req, res){
-//     console.log(new Date()+' '+
-//         req.connection.remoteAddress+' '+
-//         // req.socket.getPeerCertificate().subject.CN+' '+
-//         req.method+' '+req.url);
-//     res.sendFile(path.join(__dirname+'/vue.app.html'));
-// });
+//EXPL: Front-end app
+app.get('/', function(req, res){
+    console.log(req.client.authorized);
+    console.log(new Date()+' '+
+        req.connection.remoteAddress+' '+
+        // req.socket.getPeerCertificate().subject.CN+' '+
+        req.method+' '+req.url);
+    if(req.client.authorized==true){
+        res.sendFile(path.join(__dirname+'/vue.app.html'))
+    }
+    else{
+        res.send('<a href="authenticated">Log in using client certificate</a>')
+    }
+});
 
 var options = {
     key: fs.readFileSync('./cert/server-key.pem'),
@@ -120,29 +130,29 @@ var options = {
     rejectUnauthorized: false
 };
 
-app.get('/', (req, res) => {
-    res.send('<a href="authenticated">Log in using client certificate</a>')
-})
+// app.get('/', (req, res) => {
+//     res.send('<a href="authenticated">Log in using client certificate</a>')
+// })
+//
+// var autorized = false;
 
-var autorized = false;
-
-app.get('/authenticate', (req, res) => {
-    const cert = req.connection.getPeerCertificate()
-    console.log(req.client.authorized);
-    console.log(cert.subject.O);
-    if (req.client.authorized) {
-        // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
-        autorized = true;
-    } else if (cert.subject) {
-        res.status(403)
-            // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
-    } else {
-        res.status(401)
-            .send(`Sorry, but you need to provide a client certificate to continue.`)
-    }
-    res.end();
-});
-
+// app.get('/authenticate', (req, res) => {
+//     const cert = req.connection.getPeerCertificate()
+//     console.log(req.client.authorized);
+//     console.log(cert.subject.O);
+//     if (req.client.authorized) {
+//         // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
+//         autorized = true;
+//     } else if (cert.subject) {
+//         res.status(403)
+//             // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
+//     } else {
+//         res.status(401)
+//             .send(`Sorry, but you need to provide a client certificate to continue.`)
+//     }
+//     res.end();
+// });
+//
 app.get('/authenticated', (req, res) => {
     if (autorized) {
         // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
@@ -157,6 +167,17 @@ app.get('/authenticated', (req, res) => {
     }
 });
 
+var server = https.createServer(options, app);
+var io = require('socket.io')(server);
 
-https.createServer(options, app).listen(3000);
+io.on('connection', function(socket) {
+    console.log("new connection");
+    socket.emit('message', 'This is a message from the dark side.');
+});
 
+
+server.listen(3000, function() {
+    console.log('server up and running at 3000 port');
+});
+
+// io.httpServer.close();
