@@ -116,9 +116,9 @@ app.get('/', function(req, res){
 var options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
-    ca: fs.readFileSync('./cert/ca-crt.pem'),
-    requestCert: true,
-    rejectUnauthorized: true
+    // ca: fs.readFileSync('./cert/ca-crt.pem'),
+    // requestCert: true,
+    // rejectUnauthorized: false
 };
 https.createServer(options, function (req, res) {
     console.log(new Date()+' '+

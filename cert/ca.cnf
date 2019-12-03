@@ -17,6 +17,7 @@ distinguished_name     = req_distinguished_name
 attributes             = req_attributes
 prompt                 = no
 output_password        = password
+x509_extensions        = v3_req
 
 [ req_distinguished_name ]
 C                      = US
@@ -29,3 +30,14 @@ emailAddress           = certs@example.com
 
 [ req_attributes ]
 challengePassword      = test
+
+[ v3_req ]
+# Extensions to add to a certificate request
+keyUsage = critical, digitalSignature, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = ca
+DNS.2 = ca.com
+DNS.3 = www.ca.com

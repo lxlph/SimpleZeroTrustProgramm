@@ -5,6 +5,7 @@ distinguished_name     = req_distinguished_name
 attributes             = req_attributes
 prompt                 = no
 x509_extensions        = v3_ca
+req_extensions         = v3_req
 
 [ req_distinguished_name ]
 C                      = US
@@ -20,6 +21,17 @@ challengePassword      = password
 
 [ v3_ca ]
 authorityInfoAccess = @issuer_info
+
+[ v3_req ]
+# Extensions to add to a certificate request
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = localhost.com
+DNS.3 = www.localhost.com
 
 [ issuer_info ]
 OCSP;URI.0 = http://ocsp.example.com/

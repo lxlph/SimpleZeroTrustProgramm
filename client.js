@@ -5,8 +5,8 @@ var options = {
     port: 3000,
     path: '/',
     method: 'GET',
-    key: fs.readFileSync('./cert/client1-key.pem'),
-    cert: fs.readFileSync('./cert/client1-crt.pem'),
+    // key: fs.readFileSync('./cert/client1-key.pem'),
+    // cert: fs.readFileSync('./cert/client1-crt.pem'),
     ca: fs.readFileSync('./cert/ca-crt.pem')
 };
 
