@@ -5,9 +5,9 @@ var options = {
     port: 3000,
     path: '/',
     method: 'GET',
-    // key: fs.readFileSync('./cert/client1-key.pem'),
-    // cert: fs.readFileSync('./cert/client1-crt.pem'),
-    ca: fs.readFileSync('./cert/ca-crt.pem')
+    key: fs.readFileSync('./cert/localhost-client-key.pem'),
+    cert: fs.readFileSync('./cert/localhost-client.pem'),
+    ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem')
 };
 
 var req1 = https.request(options, function(res) {
@@ -15,7 +15,7 @@ var req1 = https.request(options, function(res) {
     console.log("Client A headers: ", res.headers);
     console.log("Server Host Name: "+ res.connection.getPeerCertificate().subject.CN);
     res.on('data', function(d) {
-        process.stdout.write(d);
+        process.stdout.write("hello");
     });
 });
 req1.end();

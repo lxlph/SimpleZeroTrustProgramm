@@ -6,7 +6,7 @@ var speakeasy = require('speakeasy');
 var QRCode = require('qrcode');
 const path = require('path');
 var fs = require('fs');
-//var clientCertificateAuth = require('client-certificate-auth');
+var clientCertificateAuth = require('client-certificate-auth');
 
 app.use(bodyParser.json());
 
@@ -106,6 +106,10 @@ app.post('/twofactor/verify', function(req, res){
 
 //EXPL: Front-end app
 app.get('/', function(req, res){
+    console.log(new Date()+' '+
+        req.connection.remoteAddress+' '+
+        // req.socket.getPeerCertificate().subject.CN+' '+
+        req.method+' '+req.url);
     res.sendFile(path.join(__dirname+'/vue.app.html'));
 });
 
@@ -116,16 +120,9 @@ app.get('/', function(req, res){
 var options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
-    // ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert'),
-    // requestCert: true,
-    // rejectUnauthorized: false
+    ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
+    requestCert: true,
+    rejectUnauthorized: true
 };
-https.createServer(options, function (req, res) {
-    console.log(new Date()+' '+
-        req.connection.remoteAddress+' '+
-        // req.socket.getPeerCertificate().subject.CN+' '+
-        req.method+' '+req.url);
-    res.writeHead(200);
-    res.end("hello world\n");
-}, app).listen(3000);
+https.createServer(options, app).listen(3000);
 
