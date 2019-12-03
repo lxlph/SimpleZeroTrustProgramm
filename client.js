@@ -3,7 +3,7 @@ var https = require('https');
 var options = {
     hostname: 'localhost',
     port: 3000,
-    path: '/',
+    path: '/authenticate',
     method: 'GET',
     key: fs.readFileSync('./cert/localhost-client-key.pem'),
     cert: fs.readFileSync('./cert/localhost-client.pem'),
@@ -13,7 +13,8 @@ var options = {
 var req1 = https.request(options, function(res) {
     console.log("Client A statusCode: ", res.statusCode);
     console.log("Client A headers: ", res.headers);
-    console.log("Server Host Name: "+ res.connection.getPeerCertificate().subject.CN);
+    // console.log("Server Host Name: "+ res.connection.getPeerCertificate());
+    // console.log(res.connection.getPeerCertificate().subject.O);
     res.on('data', function(d) {
         process.stdout.write("hello");
     });

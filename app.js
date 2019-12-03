@@ -25,7 +25,6 @@ function getIdByEmail (email){
     return id;
 }
 
-
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
     id = getIdByEmail(req.body.email);
@@ -104,17 +103,13 @@ app.post('/twofactor/verify', function(req, res){
     return res.status(400).send('Invalid token, verification failed');
 });
 
-//EXPL: Front-end app
-app.get('/', function(req, res){
-    console.log(new Date()+' '+
-        req.connection.remoteAddress+' '+
-        // req.socket.getPeerCertificate().subject.CN+' '+
-        req.method+' '+req.url);
-    res.sendFile(path.join(__dirname+'/vue.app.html'));
-});
-
-// app.listen('3000', ()=>{
-//     console.log('App running on 3000');
+// //EXPL: Front-end app
+// app.get('/', function(req, res){
+//     console.log(new Date()+' '+
+//         req.connection.remoteAddress+' '+
+//         // req.socket.getPeerCertificate().subject.CN+' '+
+//         req.method+' '+req.url);
+//     res.sendFile(path.join(__dirname+'/vue.app.html'));
 // });
 
 var options = {
@@ -122,7 +117,46 @@ var options = {
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
     requestCert: true,
-    rejectUnauthorized: true
+    rejectUnauthorized: false
 };
+
+app.get('/', (req, res) => {
+    res.send('<a href="authenticated">Log in using client certificate</a>')
+})
+
+var autorized = false;
+
+app.get('/authenticate', (req, res) => {
+    const cert = req.connection.getPeerCertificate()
+    console.log(req.client.authorized);
+    console.log(cert.subject.O);
+    if (req.client.authorized) {
+        // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
+        autorized = true;
+    } else if (cert.subject) {
+        res.status(403)
+            // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
+    } else {
+        res.status(401)
+            .send(`Sorry, but you need to provide a client certificate to continue.`)
+    }
+    res.end();
+});
+
+app.get('/authenticated', (req, res) => {
+    if (autorized) {
+        // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
+    // } else if (cert.subject) {
+    //     res.status(403)
+    //     // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
+        res.sendFile(path.join(__dirname+'/vue.app.html'));
+        autorized = false;
+    } else {
+        res.status(401)
+            .send(`Sorry, but you need to provide a client certificate to continue.`)
+    }
+});
+
+
 https.createServer(options, app).listen(3000);
 
