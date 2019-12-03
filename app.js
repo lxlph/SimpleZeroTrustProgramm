@@ -116,14 +116,14 @@ app.get('/', function(req, res){
 var options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
-    // ca: fs.readFileSync('./cert/ca-crt.pem'),
+    // ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert'),
     // requestCert: true,
     // rejectUnauthorized: false
 };
 https.createServer(options, function (req, res) {
     console.log(new Date()+' '+
         req.connection.remoteAddress+' '+
-        req.socket.getPeerCertificate().subject.CN+' '+
+        // req.socket.getPeerCertificate().subject.CN+' '+
         req.method+' '+req.url);
     res.writeHead(200);
     res.end("hello world\n");
