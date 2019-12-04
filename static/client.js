@@ -77,13 +77,12 @@
                 localStorage.email = email;
                 localStorage.password = password;
                 this.$http.post('/login', { email: email, password: password}).then( response =>{
-                    console.log(response);
+                    clientUsername = email;
                     if(response.status === 206){
                         return router.push('otp');
                     } else if(response.status === 200) {
                         localStorage.clear();
                         localStorage.loggedin = true;
-                        clientUsername = email;
                         return router.push('setup');
                     }
                 }).catch(err => {
@@ -185,7 +184,6 @@
                 this.$http.post('/twofactor/setup', {}).then(response => {
                     const result =  response.body;
                     if(response.status === 200){
-                        console.log(result);
                         alert(result.message);
                         this.twofactor = result;
                     }
