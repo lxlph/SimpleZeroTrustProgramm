@@ -1,21 +1,20 @@
 const express = require('express');
-var app = express();
+const app = express();
 const https = require('https');
 const bodyParser = require('body-parser');
-var speakeasy = require('speakeasy');
-var QRCode = require('qrcode');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const path = require('path');
-var fs = require('fs');
-var dateFormat = require('dateformat');
-// var clientCertificateAuth = require('client-certificate-auth');
+const fs = require('fs');
+const dateFormat = require('dateformat');
 
 app.use(bodyParser.json());
 app.use("/static", express.static('./static/'));
 
-var jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
-var users = jsonParsed.users;
-var messages = [];
-var id = 0;
+let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
+let users = jsonParsed.users;
+let messages = [];
+let id = 0;
 
 //get userid by email
 function getIdByEmail (email){
@@ -32,11 +31,6 @@ function getIdByEmail (email){
 app.get('/client', function(req, res) {
     res.sendFile(__dirname + '/client.html');
 });
-
-// app.get('/cliechatview', function(req, res) {
-//     res.json(messages);
-//     return res.send('success');
-// });
 
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
@@ -182,8 +176,12 @@ app.get('/authenticated', (req, res) => {
     }
 });
 
-var server = https.createServer(options, app);
-var io = require('socket.io')(server);
+
+/**
+ * start server
+ */
+const server = https.createServer(options, app);
+const io = require('socket.io')(server);
 server.listen(3000, function() {
     console.log('server up and running at 3000 port');
 });
@@ -196,16 +194,5 @@ io.on('connection', function(socket) {
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
         messages.push(newMessage);
         io.emit('read-msg', newMessage);
-    });
-
-    socket.on('add-user', function(user){
-        users.push({ id: socket.id, name: user });
-        io.emit('update-users', users);
-    });
-
-    socket.on('disconnect', function() {
-        users = users.filter(function(user){
-            return user.id != socket.id;
-        });
     });
 });
