@@ -19,21 +19,25 @@
     var app = new Vue({
         el: '#app',
         data: {
-            messages: [],
-            users: [],
-            userName: '',
-            isLogged: false
+            messages: []
         },
         methods: {
-            sendMessage: function(message) {
-                if (message) {
-                    socket.emit('send-msg', { message: message, user: "test" });
-                }
-            },
             scrollToEnd: function() {
                 var container = this.$el.querySelector('.messages');
                 container.scrollTop = container.scrollHeight;
             }
+        },
+        created: function () {
+            // initialize existing messages
+            this.$http.get('/messages').then(response => {
+                if(response.status === 200){
+                    this.messages = response.body;
+                }
+            }).catch((err)=>{
+                if(err.status === 401){
+                    alert("couldn't get messages");
+                }
+            });
         },
         updated() {
             this.scrollToEnd();

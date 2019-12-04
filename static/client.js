@@ -1,5 +1,8 @@
 (function() {
-    var socket = io('https://localhost:3000');
+    const socket = io('https://localhost:3000');
+    let clientUsername = "anonymous";
+    let allMessages = [];
+
     const NotFound = { template: '<p>Page not found</p>' }
     const ClieChatView = {
         template: `
@@ -26,29 +29,17 @@
         methods: {
             sendMessage: function(message) {
                 if (message) {
-                    socket.emit('send-msg', { message: message, user: "bob" });
+                    socket.emit('send-msg', { message: message, user: clientUsername });
                 }
-                this.$http.get('/messages').then(response => {
-                    if(response.status === 200){
-                        this.messages = response.body;
-                    }
-                }).catch((err)=>{
-                    if(err.status === 401){
-                        alert("couldn't get messages");
-                    }
-                });
-            },
-            setName: function(userName) {
-                this.userName = userName;
-                this.isLogged = true;
-                socket.emit('add-user', this.userName);
             }
+
         },
-        created: function () {
+        created: function (messages) {
             // initialize existing messages
             this.$http.get('/messages').then(response => {
                 if(response.status === 200){
                     this.messages = response.body;
+                    allMessages = this.messages;
                 }
             }).catch((err)=>{
                 if(err.status === 401){
@@ -58,10 +49,7 @@
         },
         data: function(){
             return{
-                messages: [],
-                users: [],
-                userName: '',
-                isLogged: false
+                messages: []
             }
         },
     };
@@ -89,11 +77,13 @@
                 localStorage.email = email;
                 localStorage.password = password;
                 this.$http.post('/login', { email: email, password: password}).then( response =>{
+                    console.log(response);
                     if(response.status === 206){
                         return router.push('otp');
                     } else if(response.status === 200) {
                         localStorage.clear();
                         localStorage.loggedin = true;
+                        clientUsername = email;
                         return router.push('setup');
                     }
                 }).catch(err => {
@@ -298,5 +288,11 @@
     var app = new Vue({
         el: '#app',
         router
+    });
+    socket.on('read-msg', function(message) {
+        allMessages.push({ text: message.text, user: message.user, date: message.date });
+    });
+    socket.on('init-chat', function(messages) {
+        allMessages = messages;
     });
 })();

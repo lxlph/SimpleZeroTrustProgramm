@@ -19,7 +19,6 @@ let id = 0;
 //get userid by email
 function getIdByEmail (email){
     var id = -1;
-    console.log(users);
     users.forEach(function (user) {
         if(user.email == email){
            id = user.id;
@@ -29,7 +28,7 @@ function getIdByEmail (email){
 }
 
 app.get('/client', function(req, res) {
-    res.sendFile(__dirname + '/client.html');
+    res.sendFile(path.join(__dirname + '/client.html'));
 });
 
 //login API supports both, normal auth + 2fa
@@ -131,7 +130,7 @@ app.get('/', function(req, res){
     }
 });
 
-var options = {
+let options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
@@ -177,6 +176,7 @@ app.get('/authenticated', (req, res) => {
 });
 
 
+
 /**
  * start server
  */
@@ -189,6 +189,10 @@ server.listen(3000, function() {
 io.on('connection', function(socket) {
 
     socket.emit('init-chat', messages);
+
+    socket.on('logmsg', function(msg) {
+        console.log(msg);
+    });
 
     socket.on('send-msg', function(data) {
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
