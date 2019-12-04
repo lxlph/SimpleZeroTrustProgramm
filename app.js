@@ -33,9 +33,10 @@ app.get('/client', function(req, res) {
     res.sendFile(__dirname + '/client.html');
 });
 
-app.get('/cliechatview', function(req, res) {
-    return res.send('success');
-});
+// app.get('/cliechatview', function(req, res) {
+//     res.json(messages);
+//     return res.send('success');
+// });
 
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
@@ -93,6 +94,11 @@ app.post('/twofactor/setup', function(req, res){
 //get 2fa details
 app.get('/twofactor/setup', function(req, res){
     res.json(users[id].twofactor);
+});
+
+//get message
+app.get('/messages', function(req, res){
+    res.json(messages);
 });
 
 //disable 2fa
@@ -183,6 +189,8 @@ server.listen(3000, function() {
 });
 
 io.on('connection', function(socket) {
+
+    socket.emit('init-chat', messages);
 
     socket.on('send-msg', function(data) {
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };

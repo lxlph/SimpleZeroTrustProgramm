@@ -47,4 +47,7 @@
     socket.on('read-msg', function(message) {
         app.messages.push({ text: message.text, user: message.user, date: message.date });
     });
+    socket.on('init-chat', function(messages) {
+        app.messages = messages;
+    });
 })();
