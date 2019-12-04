@@ -3,8 +3,8 @@
     const NotFound = { template: '<p>Page not found</p>' }
     const ClieChatView = {
         template: `
-                        <!--<h5>Simple VueJS, SocketIO and NodeJS chat</h5>-->
-
+                    <div>
+                        <h5>Simple VueJS, SocketIO and NodeJS chat</h5>
                         <div class="columns">
                             <div class="column is-two-thirds">
                                 <transition name="slide-fade">
@@ -21,19 +21,9 @@
                                 </transition>
                             </div>
                         </div>
+                    </div>
             `,
         methods: {
-            initMessages: function(){
-                this.$http.get('/messages').then(response => {
-                    if(response.status === 200){
-                        this.messages = response.body;
-                    }
-                }).catch((err)=>{
-                    if(err.status === 401){
-                        alert("couldn't get messages");
-                    }
-                });
-            },
             sendMessage: function(message) {
                 if (message) {
                     socket.emit('send-msg', { message: message, user: "bob" });
@@ -54,6 +44,18 @@
                 socket.emit('add-user', this.userName);
             }
         },
+        created: function () {
+            // initialize existing messages
+            this.$http.get('/messages').then(response => {
+                if(response.status === 200){
+                    this.messages = response.body;
+                }
+            }).catch((err)=>{
+                if(err.status === 401){
+                    alert("couldn't get messages");
+                }
+            });
+        },
         data: function(){
             return{
                 messages: [],
@@ -62,7 +64,7 @@
                 isLogged: false
             }
         },
-    }
+    };
     const Login = {
         template: `
                     <div class="col-md-4 col-md-offset-4">
@@ -246,16 +248,6 @@
         }
     }
 
-    const routes = [
-        { path: '/cliechatview', component: ClieChatView },
-        { path: '/login', component: Login },
-        { path: '/otp', component: Otp },
-        { path: '/setup', component: Setup }
-    ];
-    const router = new VueRouter({
-        routes // short for `routes: routes`
-    });
-
     // Message Component
     Vue.component('message', {
         props: ['messageData'],
@@ -294,23 +286,17 @@
             }
         }
     });
-
+    const routes = [
+        { path: '/cliechatview', component: ClieChatView },
+        { path: '/login', component: Login },
+        { path: '/otp', component: Otp },
+        { path: '/setup', component: Setup }
+    ];
+    const router = new VueRouter({
+        routes // short for `routes: routes`
+    });
     var app = new Vue({
         el: '#app',
         router
-    });
-
-    /**Client Socket events**/
-    // When the server emits a message, the client updates message list
-    // socket.on('read-msg', function(message) {
-    //     app.messages.push({ text: message.text, user: message.user, date: message.date });
-    // });
-    //
-    // Init chat event. Updates the initial chat with current messages
-    socket.on('init-chat', function(messages) {
-        // app.messages = messages;
-        // console.log(messages);
-        // ClieChatView.methods.initMessages();
-        // console.log(ClieChatView.messages);
     });
 })();

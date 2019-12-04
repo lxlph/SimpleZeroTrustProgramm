@@ -7,26 +7,26 @@
     </head>
     <body>
         <div id="app" class="container">
-            <h5>Simple VueJS, SocketIO and NodeJS chat</h5>
+            <div>
+                <h5>Server chat</h5>
 
-            <!-- Chat Box goes here -->
-            <div class="columns">
-                <div class="column is-two-thirds">
+                <!-- Chat Box goes here -->
+                <div class="columns">
+                    <div class="column is-two-thirds">
 
-                    <!-- message list -->
-                    <transition name="slide-fade">
-                        <div class="box">
-                            <div class="messages">
-                                <ul>
-                                    <li v-for="message in messages">
-                                        <message v-bind:message-data="message"></message>
-                                    </li>
-                                </ul>
+                        <!-- message list -->
+                        <transition name="slide-fade">
+                            <div class="box">
+                                <div class="messages">
+                                    <ul>
+                                        <li v-for="message in messages">
+                                            <message v-bind:message-data="message"></message>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                            <!-- inputs new message -->
-                            <!--<input-message v-on:send-message="sendMessage"></input-message>-->
-                        </div>
-                    </transition>
+                        </transition>
+                    </div>
                 </div>
             </div>
         </div>
