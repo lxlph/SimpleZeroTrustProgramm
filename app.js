@@ -14,11 +14,13 @@ app.use("/static", express.static('./static/'));
 
 var jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 var users = jsonParsed.users;
+var messages = [];
 var id = 0;
 
 //get userid by email
 function getIdByEmail (email){
     var id = -1;
+    console.log(users);
     users.forEach(function (user) {
         if(user.email == email){
            id = user.id;
@@ -29,6 +31,10 @@ function getIdByEmail (email){
 
 app.get('/client', function(req, res) {
     res.sendFile(__dirname + '/client.html');
+});
+
+app.get('/cliechatview', function(req, res) {
+    return res.send('success');
 });
 
 //login API supports both, normal auth + 2fa
@@ -176,13 +182,9 @@ server.listen(3000, function() {
     console.log('server up and running at 3000 port');
 });
 
-var messages = [];
-var users = [];
-
 io.on('connection', function(socket) {
 
     socket.on('send-msg', function(data) {
-        console.log(data);
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
         messages.push(newMessage);
         io.emit('read-msg', newMessage);
