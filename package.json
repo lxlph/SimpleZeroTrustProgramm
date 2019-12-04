@@ -12,6 +12,7 @@
   "dependencies": {
     "body-parser": "^1.18.0",
     "client-certificate-auth": "^0.3.0",
+    "dateformat": "^3.0.3",
     "express": "^4.15.4",
     "qrcode": "^0.9.0",
     "socket.io": "^2.3.0",

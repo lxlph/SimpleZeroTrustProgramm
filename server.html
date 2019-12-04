@@ -1,0 +1,38 @@
+<!DOCTYPE>
+<html>
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" type="text/css">
+    <script src="/socket.io/socket.io.js"></script>
+    <title>Server</title>
+</head>
+<body>
+    <div id="app" class="container">
+        <h5>Simple VueJS, SocketIO and NodeJS chat</h5>
+
+        <!-- Chat Box goes here -->
+        <div class="columns">
+            <div class="column is-two-thirds">
+
+                <!-- message list -->
+                <transition name="slide-fade">
+                    <div class="box">
+                        <div class="messages">
+                            <ul>
+                                <li v-for="message in messages">
+                                    <message v-bind:message-data="message"></message>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- inputs new message -->
+                        <input-message v-on:send-message="sendMessage"></input-message>
+                    </div>
+                </transition>
+            </div>
+        </div>
+    </div>
+<script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
+    <script src="static/serverInfo.js"></script>
+</body>
+</html>

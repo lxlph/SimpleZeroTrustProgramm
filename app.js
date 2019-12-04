@@ -6,9 +6,11 @@ var speakeasy = require('speakeasy');
 var QRCode = require('qrcode');
 const path = require('path');
 var fs = require('fs');
+var dateFormat = require('dateformat');
 // var clientCertificateAuth = require('client-certificate-auth');
 
 app.use(bodyParser.json());
+app.use("/static", express.static('./static/'));
 
 var jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 var users = jsonParsed.users;
@@ -115,10 +117,11 @@ app.get('/', function(req, res){
         // req.socket.getPeerCertificate().subject.CN+' '+
         req.method+' '+req.url);
     if(req.client.authorized==true){
-        res.sendFile(path.join(__dirname+'/vue.app.html'))
+        // res.sendFile(path.join(__dirname+'/vue.app.html'))
+        res.send("hello");
     }
     else{
-        res.send('<a href="authenticated">Log in using client certificate</a>')
+        res.sendFile(path.join(__dirname+'/server.html'))
     }
 });
 
@@ -169,15 +172,30 @@ app.get('/authenticated', (req, res) => {
 
 var server = https.createServer(options, app);
 var io = require('socket.io')(server);
-
-io.on('connection', function(socket) {
-    console.log("new connection");
-    socket.emit('message', 'This is a message from the dark side.');
-});
-
-
 server.listen(3000, function() {
     console.log('server up and running at 3000 port');
 });
 
-// io.httpServer.close();
+var messages = [];
+var users = [];
+
+io.on('connection', function(socket) {
+
+    socket.on('send-msg', function(data) {
+        console.log(data);
+        var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
+        messages.push(newMessage);
+        io.emit('read-msg', newMessage);
+    });
+
+    socket.on('add-user', function(user){
+        users.push({ id: socket.id, name: user });
+        io.emit('update-users', users);
+    });
+
+    socket.on('disconnect', function() {
+        users = users.filter(function(user){
+            return user.id != socket.id;
+        });
+    });
+});
