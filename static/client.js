@@ -76,6 +76,7 @@
             login: function(email, password){
                 localStorage.email = email;
                 localStorage.password = password;
+                console.log("Login");
                 this.$http.post('/login', { email: email, password: password}).then( response =>{
                     clientUsername = email;
                     if(response.status === 206){

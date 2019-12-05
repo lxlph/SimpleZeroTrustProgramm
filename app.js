@@ -153,8 +153,9 @@ app.get('/client', function(req, res){
         res.sendFile(path.join(__dirname + '/client.html'));
     }
     else{
+        res.sendFile(path.join(__dirname + '/client.html'));
         // alert("Please upload the right certificate files!");
-        res.redirect(path.join(__dirname+'/server.html'));
+        // res.redirect(path.join(__dirname+'/server.html'));
         // res.sendFile(path.join(__dirname+'/server.html'));
     }
 });
@@ -163,15 +164,9 @@ let options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
-    requestCert: true,
+    requestCert: false,
     rejectUnauthorized: false
 };
-
-// app.get('/', (req, res) => {
-//     res.send('<a href="authenticated">Log in using client certificate</a>')
-// })
-//
-// var autorized = false;
 
 // app.get('/authenticate', (req, res) => {
 //     const cert = req.connection.getPeerCertificate()
