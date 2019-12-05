@@ -293,4 +293,5 @@
     socket.on('init-chat', function(messages) {
         allMessages = messages;
     });
+
 })();

@@ -1,15 +1,13 @@
 const express = require('express');
 const app = express();
 const https = require('https');
+const http = require('http');
 const bodyParser = require('body-parser');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const dateFormat = require('dateformat');
-
-app.use(bodyParser.json());
-app.use("/static", express.static('./static/'));
 
 let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 let users = jsonParsed.users;
@@ -26,6 +24,9 @@ function getIdByEmail (email){
     });
     return id;
 }
+
+app.use(bodyParser.json());
+app.use("/static", express.static('./static/'));
 
 app.get('/client', function(req, res) {
     res.sendFile(path.join(__dirname + '/client.html'));
@@ -123,12 +124,22 @@ app.get('/', function(req, res){
         req.method+' '+req.url);
     if(req.client.authorized==true){
         // res.sendFile(path.join(__dirname+'/vue.app.html'))
+        // res.redirect('client.html');
         res.send("hello");
+        res.sendFile(path.join(__dirname+'/client.html'));
     }
     else{
         res.sendFile(path.join(__dirname+'/server.html'))
     }
 });
+
+/*const clientAuthMiddleware = () => (req, res, next) => {
+    if (!req.client.authorized) {
+        return res.status(401).send('Invalid client certificate authentication.');
+    }
+    return next();
+};
+app.use(clientAuthMiddleware());*/
 
 let options = {
     key: fs.readFileSync('./cert/server-key.pem'),
@@ -175,8 +186,6 @@ app.get('/authenticated', (req, res) => {
     }
 });
 
-
-
 /**
  * start server
  */
@@ -200,3 +209,25 @@ io.on('connection', function(socket) {
         io.emit('read-msg', newMessage);
     });
 });
+
+let options2 = {
+    hostname: 'localhost',
+    port: 3000,
+    path: '/',
+    method: 'GET',
+    key: fs.readFileSync('./cert/localhost-client-key.pem'),
+    cert: fs.readFileSync('./cert/localhost-client.pem'),
+    ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem')
+};
+
+callback = function(res) {
+    console.log("Client A statusCode: ", res.statusCode);
+    console.log("Client A headers: ", res.headers);
+    // console.log("Server Host Name: "+ res.connection.getPeerCertificate());
+    // console.log(res.connection.getPeerCertificate().subject.O);
+    res.on('data', function(d) {
+        process.stdout.write("data");
+    });
+};
+
+https.request(options2, callback).end();
