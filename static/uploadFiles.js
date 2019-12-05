@@ -82,7 +82,7 @@
                 formData.append('file2', this.file2);
                 this.uploading=true;
                 this.uploadStatus = "";
-                this.$http.post('/echo/json/', formData, {
+                this.$http.post('/upload', formData, {
                     before: request => {
                         this.request = request;
                     },
