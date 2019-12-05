@@ -13,6 +13,7 @@ let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 let users = jsonParsed.users;
 let messages = [];
 let id = 0;
+let autho = false;
 
 //get userid by email
 function getIdByEmail (email){
@@ -30,9 +31,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(formidableMiddleware());
 app.use("/static", express.static('./static/'));
 
-app.get('/client', function(req, res) {
-    res.sendFile(path.join(__dirname + '/client.html'));
-});
+// app.get('/client', function(req, res) {
+//     res.sendFile(path.join(__dirname + '/client.html'));
+// });
 
 app.post('/echo/json', function (req, res) {
     //check whether files were really sent
@@ -135,13 +136,26 @@ app.get('/', function(req, res){
     //     req.connection.remoteAddress+' '+
     //     // req.socket.getPeerCertificate().subject.CN+' '+
     //     req.method+' '+req.url);
+    // if(req.client.authorized){
+    //     console.log("autho works");
+    //     res.redirect('client?');
+    // }
+    // else{
+    //     console.log("autho does not work");
+    //     res.sendFile(path.join(__dirname+'/server.html'));
+    // }
+    res.sendFile(path.join(__dirname+'/server.html'));
+});
+app.get('/client', function(req, res){
     if(req.client.authorized){
-        console.log("autho works");
-        res.redirect('client?');
+        autho = true;
+    }else if(autho){
+        res.sendFile(path.join(__dirname + '/client.html'));
     }
     else{
-        console.log("autho does not work");
-        res.sendFile(path.join(__dirname+'/server.html'));
+        // alert("Please upload the right certificate files!");
+        res.redirect(path.join(__dirname+'/server.html'));
+        // res.sendFile(path.join(__dirname+'/server.html'));
     }
 });
 
@@ -218,7 +232,7 @@ function reqWithKey(file_path, file2_path){
     let options2 = {
         hostname: 'localhost',
         port: 3000,
-        path: '/',
+        path: '/client',
         method: 'GET',
         // cert: fs.readFileSync('./cert/localhost-client.pem'),
         // key: fs.readFileSync('./cert/localhost-client-key.pem'),
