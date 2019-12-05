@@ -137,7 +137,7 @@ app.get('/client', function(req, res){
     else{
         res.status(401)
             .send(`Sorry, but you need to provide a client certificate to continue. 
-                    Please go back to the "Upload key" - page`);
+                    Please go back to "Upload page"`);
 
     }
 });

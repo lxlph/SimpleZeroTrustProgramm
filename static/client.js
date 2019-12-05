@@ -7,11 +7,11 @@
     const ClieChatView = {
         template: `
                     <div>
-                        <h5>Simple VueJS, SocketIO and NodeJS chat</h5>
+                        <h5>Hello {{user}}! Your chat window:</h5>
                         <div class="columns">
                             <div class="column is-two-thirds">
                                 <transition name="slide-fade">
-                                    <div class="box">
+                                    <div class="box" id="chat-window">
                                         <div class="messages">
                                             <ul>
                                                 <li v-for="message in messages">
@@ -49,28 +49,27 @@
         },
         data: function(){
             return{
+                user: clientUsername,
                 messages: []
             }
         },
     };
     const Login = {
         template: `
-                    <div class="col-md-4 col-md-offset-4">
-                        <form>
-                            <div class="form-group">
-                                <label for="email">Email address:</label>
-                                <input v-model="email" type="email" class="form-control" id="email">
-                            </div>
-                            <div class="form-group">
-                                <label for="pwd">Password:</label>
-                                <input v-model="password" type="password" class="form-control" id="pwd">
-                            </div>
-                            <div class="checkbox">
-                                <label><input type="checkbox"> Remember me</label>
-                            </div>
-                            <button v-on:click="login(email, password)"  class="btn btn-default">Submit</button>
-                        </form>
-                    </div>
+                    <form>
+                        <div class="form-group">
+                            <label for="email">Email address:</label>
+                            <input v-model="email" type="email" class="form-control" id="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="pwd">Password:</label>
+                            <input v-model="password" type="password" class="form-control" id="pwd">
+                        </div>
+                        <div class="checkbox">
+                            <label><input type="checkbox"> Remember me</label>
+                        </div>
+                        <button v-on:click="login(email, password)"  class="btn btn-primary">Submit</button>
+                    </form>
             `,
         methods: {
             login: function(email, password){
@@ -100,15 +99,13 @@
     }
     const Otp = {
         template: `
-                <div class="col-md-4 col-md-offset-4">
-                    <form>
-                        <div class="form-group">
-                            <label for="otp">Enter Otp:</label>
-                            <input v-model="otp" type="otp" class="form-control" id="otp">
-                        </div>
-                        <button v-on:click="login(otp)"  class="btn btn-default">Submit</button>
-                    </form>
-                </div>
+                <form>
+                    <div class="form-group">
+                        <label for="otp">Enter Otp:</label>
+                        <input v-model="otp" type="otp" class="form-control" id="otp">
+                    </div>
+                    <button v-on:click="login(otp)"  class="btn btn-default">Submit</button>
+                </form>
             ` ,
         data: function(){
             return {
@@ -142,14 +139,14 @@
     const Setup = {
         template: `
                 <div>
-                    <div class="col-md-4 col-md-offset-4" v-if="twofactor.secret">
+                    <div v-if="twofactor.secret">
                         <h3>Current Settings</h3>
                         <img :src="twofactor.dataURL" alt="..." class="img-thumbnail">
                         <p>Secret - {{twofactor.secret || twofactor.tempSecret}}</p>
                         <p>Type - TOTP</p>
                         <p><router-link to="/cliechatview">Go to Chat</router-link></p>
                     </div>
-                    <div class="col-md-4 col-md-offset-4" v-if="!twofactor.secret">
+                    <div v-if="!twofactor.secret">
                         <h3>Setup Otp</h3>
                         <div>
                             <button v-on:click="setup()"  class="btn btn-default">Enable</button>
@@ -164,11 +161,11 @@
                                     <label for="otp">Enter Otp:</label>
                                     <input v-model="otp" type="otp" class="form-control" id="otp">
                                 </div>
-                                <button v-on:click="confirm(otp)"  class="btn btn-default">confirm</button>
+                                <button v-on:click="confirm(otp)"  class="btn btn-primary">confirm</button>
                             </form>
                         </span>
                     </div>
-                    <div class="col-md-1">
+                    <div>
                         <h3>Disable</h3>
                         <form>
                             <router-view></router-view>
@@ -240,7 +237,7 @@
         props: ['messageData'],
         template: ` <div class="media-content">
                         <div class="content">
-                            <p>
+                            <p class="chatWindowMessage">
                                 <strong>{{messageData.user}}</strong> <small>{{messageData.date}}</small>
                                 <br>
                                 {{messageData.text}}
@@ -258,10 +255,10 @@
         },
         template: ` <div class="controls field has-addons">
                         <div class="control is-expanded">
-                            <input v-model="message" v-on:keydown.enter="send" class="input is-primary" placeholder="Write message">
+                            <input id="inputMessage" v-model="message" v-on:keydown.enter="send" class="input is-primary" placeholder="Write message">
                         </div>
                         <div class="control">
-                            <button v-on:click="send" :disabled="!message" class="button is-primary">Send</button>
+                            <button id="sendMsgButton" v-on:click="send" :disabled="!message" class="button is-primary">Send</button>
                         </div>
                     </div>`,
         methods: {

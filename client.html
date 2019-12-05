@@ -2,20 +2,18 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Client</title>
+        <title>Client page</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" type="text/css">
         <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="static/style.css">
     </head>
     <body>
         <div id="app" class="container">
-            <div class="row">
-                <h1>WELCOME</h1>
-                <p>
-                    <router-link to="/login">Go to Login</router-link>
-                </p>
-                <br>
-                <router-view></router-view>
-            </div>
+            <h1>2. Client page</h1>
+            <p>
+                <router-link to="/login">Go to Login</router-link>
+            </p>
+            <router-view></router-view>
         </div>
         <script src="https://unpkg.com/vue"></script>
         <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>

@@ -77,7 +77,6 @@
             },
             uploadFile() {
                 let formData = new FormData();
-                // let formData2 = new FormData();
                 formData.append('file', this.file);
                 formData.append('file2', this.file2);
                 this.uploading=true;

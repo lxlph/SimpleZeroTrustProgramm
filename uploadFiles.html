@@ -4,10 +4,11 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" type="text/css">
         <script src="/socket.io/socket.io.js"></script>
         <link rel="stylesheet" href="static/style.css">
-        <title>Server</title>
+        <title>Upload page</title>
     </head>
     <body>
         <div id="app" class="container">
+            <h1>1. Upload page</h1>
             <div id="overlay" v-show="uploading" v-cloak>
                 <div class="overlay-content">
                     <h4 class="header">Uploading...</h4>
@@ -21,14 +22,16 @@
 
             <div>
                 <div class="form-group">
-                    <upload-input @file-chosen="setFile"></upload-input>
-                    <upload-input @file-chosen="setFile2"></upload-input>
+                    <p>Choose certificate file <upload-input @file-chosen="setFile"></upload-input></p>
+                    <p>Choose key file <upload-input @file-chosen="setFile2"></upload-input></p>
+
                 </div>
 
                 <div class="form-group">
                     <button class="btn btn-primary" @click="uploadFile">
-                        Upload File
+                        Upload Files
                     </button>
+
                 </div>
 
                 <div class="alert alert-success"  v-show="uploadStatus==='complete'"  v-cloak>
@@ -36,8 +39,9 @@
                 </div>
 
                 <div class="alert alert-danger"  v-show="uploadStatus==='cancelled'"  v-cloak>
-                    Upload Canclled
+                    Upload Cancelled
                 </div>
+                <p>Go to client page after succesful upload: <a href="https://localhost:3000/client?">Client page</a></p>
             </div>
         </div>
 
