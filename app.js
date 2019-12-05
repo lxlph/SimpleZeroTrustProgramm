@@ -30,7 +30,6 @@ app.use(bodyParser.json());
 
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
-    console.log(req);
     id = getIdByEmail(req.body.email);
     if(!users[id].twofactor || !users[id].twofactor.secret){ //two factor is not enabled by the user
         //check credentials
@@ -125,9 +124,9 @@ app.get('/', function(req, res){
     // }
     // else{
     //     console.log("autho does not work");
-    //     res.sendFile(path.join(__dirname+'/server.html'));
+    //     res.sendFile(path.join(__dirname+'/uploadFiles.html'));
     // }
-    res.sendFile(path.join(__dirname+'/server.html'));
+    res.sendFile(path.join(__dirname+'/uploadFiles.html'));
 });
 app.get('/client', function(req, res){
     if(req.client.authorized){
@@ -136,10 +135,10 @@ app.get('/client', function(req, res){
         res.sendFile(path.join(__dirname + '/client.html'));
     }
     else{
-        // res.sendFile(path.join(__dirname + '/client.html'));
-        // alert("Please upload the right certificate files!");
-        res.redirect(path.join(__dirname+'/server.html'));
-        // res.sendFile(path.join(__dirname+'/server.html'));
+        res.status(401)
+            .send(`Sorry, but you need to provide a client certificate to continue. 
+                    Please go back to the "Upload key" - page`);
+
     }
 });
 
@@ -151,15 +150,13 @@ let options = {
     rejectUnauthorized: false
 };
 
+//change body parser for uploading files with formData
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(formidableMiddleware());
 app.use("/static", express.static('./static/'));
 
-// app.get('/client', function(req, res) {
-//     res.sendFile(path.join(__dirname + '/client.html'));
-// });
-
-app.post('/echo/json', function (req, res) {
+//uploading files
+app.post('/upload', function (req, res) {
     //check whether files were really sent
     if(Object.keys(req.files).length < 2 && req.files.constructor === Object){
         res.sendStatus(400);
@@ -187,19 +184,6 @@ app.post('/echo/json', function (req, res) {
 //     res.end();
 // });
 //
-/*app.get('/authenticated', (req, res) => {
-if (autorized) {
-    // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
-    // } else if (cert.subject) {
-    //     res.status(403)
-    //     // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
-    res.sendFile(path.join(__dirname+'/vue.app.html'));
-    autorized = false;
-} else {
-    res.status(401)
-        .send(`Sorry, but you need to provide a client certificate to continue.`)
-}
-});*/
 
 /**
  * start server

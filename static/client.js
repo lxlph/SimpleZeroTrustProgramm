@@ -147,6 +147,7 @@
                         <img :src="twofactor.dataURL" alt="..." class="img-thumbnail">
                         <p>Secret - {{twofactor.secret || twofactor.tempSecret}}</p>
                         <p>Type - TOTP</p>
+                        <p><router-link to="/cliechatview">Go to Chat</router-link></p>
                     </div>
                     <div class="col-md-4 col-md-offset-4" v-if="!twofactor.secret">
                         <h3>Setup Otp</h3>
@@ -170,10 +171,7 @@
                     <div class="col-md-1">
                         <h3>Disable</h3>
                         <form>
-                                    <p>
-                                        <router-link to="/cliechatview">Go to Chat</router-link>
-                                    </p>
-                                    <router-view></router-view>
+                            <router-view></router-view>
                             <button v-on:click="disable()"  class="btn btn-danger">Disable</button>
                         </form>
                     </div>
