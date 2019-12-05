@@ -27,27 +27,10 @@ function getIdByEmail (email){
 }
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(formidableMiddleware());
-app.use("/static", express.static('./static/'));
-
-// app.get('/client', function(req, res) {
-//     res.sendFile(path.join(__dirname + '/client.html'));
-// });
-
-app.post('/echo/json', function (req, res) {
-    //check whether files were really sent
-    if(Object.keys(req.files).length < 2 && req.files.constructor === Object){
-        res.sendStatus(400);
-    }
-    else{
-        reqWithKey(req.files.file.path, req.files.file2.path);
-        res.sendStatus(200);
-    }
-});
 
 //login API supports both, normal auth + 2fa
 app.post('/login', function(req, res){
+    console.log(req);
     id = getIdByEmail(req.body.email);
     if(!users[id].twofactor || !users[id].twofactor.secret){ //two factor is not enabled by the user
         //check credentials
@@ -153,9 +136,9 @@ app.get('/client', function(req, res){
         res.sendFile(path.join(__dirname + '/client.html'));
     }
     else{
-        res.sendFile(path.join(__dirname + '/client.html'));
+        // res.sendFile(path.join(__dirname + '/client.html'));
         // alert("Please upload the right certificate files!");
-        // res.redirect(path.join(__dirname+'/server.html'));
+        res.redirect(path.join(__dirname+'/server.html'));
         // res.sendFile(path.join(__dirname+'/server.html'));
     }
 });
@@ -164,9 +147,28 @@ let options = {
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
-    requestCert: false,
+    requestCert: true,
     rejectUnauthorized: false
 };
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(formidableMiddleware());
+app.use("/static", express.static('./static/'));
+
+// app.get('/client', function(req, res) {
+//     res.sendFile(path.join(__dirname + '/client.html'));
+// });
+
+app.post('/echo/json', function (req, res) {
+    //check whether files were really sent
+    if(Object.keys(req.files).length < 2 && req.files.constructor === Object){
+        res.sendStatus(400);
+    }
+    else{
+        reqWithKey(req.files.file.path, req.files.file2.path);
+        res.sendStatus(200);
+    }
+});
 
 // app.get('/authenticate', (req, res) => {
 //     const cert = req.connection.getPeerCertificate()
