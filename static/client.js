@@ -54,6 +54,56 @@
             }
         },
     };
+    const ClieChatReader = {
+        template: `
+                    <div>
+                        <h5>Hello {{user}}! Your chat window:</h5>
+                        <div class="columns">
+                            <div class="column is-two-thirds">
+                                <transition name="slide-fade">
+                                    <div class="box" id="chat-window">
+                                        <div class="messages">
+                                            <ul>
+                                                <li v-for="message in messages">
+                                                    <message v-bind:message-data="message"></message>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <!--<input-message v-on:send-message="sendMessage"></input-message>-->
+                                    </div>
+                                </transition>
+                            </div>
+                        </div>
+                    </div>
+            `,
+        methods: {
+            sendMessage: function(message) {
+                if (message) {
+                    socket.emit('send-msg', { message: message, user: clientUsername });
+                }
+            }
+
+        },
+        created: function (messages) {
+            // initialize existing messages
+            this.$http.get('/messages').then(response => {
+                if(response.status === 200){
+                    this.messages = response.body;
+                    allMessages = this.messages;
+                }
+            }).catch((err)=>{
+                if(err.status === 401){
+                    alert("couldn't get messages");
+                }
+            });
+        },
+        data: function(){
+            return{
+                user: clientUsername,
+                messages: []
+            }
+        },
+    };
     const Login = {
         template: `
                     <form>
@@ -144,7 +194,7 @@
                         <img :src="twofactor.dataURL" alt="..." class="img-thumbnail">
                         <p>Secret - {{twofactor.secret || twofactor.tempSecret}}</p>
                         <p>Type - TOTP</p>
-                        <p><router-link to="/cliechatview">Go to Chat</router-link></p>
+                        <p><router-link :to="pageredirect">Go to Chat</router-link></p>
                     </div>
                     <div v-if="!twofactor.secret">
                         <h3>Setup Otp</h3>
@@ -187,6 +237,11 @@
             },
             /** Verify the otp once to enable 2fa*/
             confirm: function(otp){
+                if(clientUsername == "reader.only@gmail.com"){
+                    this.pageredirect = "/cliechatreader";
+                }else{
+                    this.pageredirect = "/cliechatview";
+                }
                 const body = {
                     token: otp
                 }
@@ -210,6 +265,7 @@
         },
         data: function(){
             return {
+                pageredirect: "",
                 twofactor: {
                     secret: "",
                     tempSecret: ""
@@ -272,6 +328,7 @@
     });
     const routes = [
         { path: '/cliechatview', component: ClieChatView },
+        { path: '/cliechatreader', component: ClieChatReader },
         { path: '/login', component: Login },
         { path: '/otp', component: Otp },
         { path: '/setup', component: Setup }

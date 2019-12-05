@@ -12,6 +12,13 @@
       "lastName": "Doe",
       "email": "jane.doe@gmail.com",
       "password": "test"
+    },
+    {
+      "id": 2,
+      "firstName": "Reader",
+      "lastName": "Only",
+      "email": "reader.only@gmail.com",
+      "password": "test"
     }
   ]
 }
