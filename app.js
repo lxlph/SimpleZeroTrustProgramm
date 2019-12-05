@@ -1,13 +1,13 @@
 const express = require('express');
 const app = express();
 const https = require('https');
-const http = require('http');
 const bodyParser = require('body-parser');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const path = require('path');
 const fs = require('fs');
 const dateFormat = require('dateformat');
+const formidableMiddleware = require('express-formidable');
 
 let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 let users = jsonParsed.users;
@@ -26,10 +26,23 @@ function getIdByEmail (email){
 }
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(formidableMiddleware());
 app.use("/static", express.static('./static/'));
 
 app.get('/client', function(req, res) {
     res.sendFile(path.join(__dirname + '/client.html'));
+});
+
+app.post('/echo/json', function (req, res) {
+    //check whether files were really sent
+    if(Object.keys(req.files).length < 2 && req.files.constructor === Object){
+        res.sendStatus(400);
+    }
+    else{
+        reqWithKey(req.files.file.path, req.files.file2.path);
+        res.sendStatus(200);
+    }
 });
 
 //login API supports both, normal auth + 2fa
@@ -117,29 +130,20 @@ app.post('/twofactor/verify', function(req, res){
 
 //EXPL: Front-end app
 app.get('/', function(req, res){
-    console.log(req.client.authorized);
-    console.log(new Date()+' '+
-        req.connection.remoteAddress+' '+
-        // req.socket.getPeerCertificate().subject.CN+' '+
-        req.method+' '+req.url);
-    if(req.client.authorized==true){
-        // res.sendFile(path.join(__dirname+'/vue.app.html'))
-        // res.redirect('client.html');
-        res.send("hello");
-        res.sendFile(path.join(__dirname+'/client.html'));
+    // console.log(req.client.authorized);
+    // console.log(new Date()+' '+
+    //     req.connection.remoteAddress+' '+
+    //     // req.socket.getPeerCertificate().subject.CN+' '+
+    //     req.method+' '+req.url);
+    if(req.client.authorized){
+        console.log("autho works");
+        res.redirect('client?');
     }
     else{
-        res.sendFile(path.join(__dirname+'/server.html'))
+        console.log("autho does not work");
+        res.sendFile(path.join(__dirname+'/server.html'));
     }
 });
-
-/*const clientAuthMiddleware = () => (req, res, next) => {
-    if (!req.client.authorized) {
-        return res.status(401).send('Invalid client certificate authentication.');
-    }
-    return next();
-};
-app.use(clientAuthMiddleware());*/
 
 let options = {
     key: fs.readFileSync('./cert/server-key.pem'),
@@ -172,19 +176,19 @@ let options = {
 //     res.end();
 // });
 //
-app.get('/authenticated', (req, res) => {
-    if (autorized) {
-        // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
+/*app.get('/authenticated', (req, res) => {
+if (autorized) {
+    // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
     // } else if (cert.subject) {
     //     res.status(403)
     //     // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
-        res.sendFile(path.join(__dirname+'/vue.app.html'));
-        autorized = false;
-    } else {
-        res.status(401)
-            .send(`Sorry, but you need to provide a client certificate to continue.`)
-    }
-});
+    res.sendFile(path.join(__dirname+'/vue.app.html'));
+    autorized = false;
+} else {
+    res.status(401)
+        .send(`Sorry, but you need to provide a client certificate to continue.`)
+}
+});*/
 
 /**
  * start server
@@ -210,24 +214,33 @@ io.on('connection', function(socket) {
     });
 });
 
-let options2 = {
-    hostname: 'localhost',
-    port: 3000,
-    path: '/',
-    method: 'GET',
-    key: fs.readFileSync('./cert/localhost-client-key.pem'),
-    cert: fs.readFileSync('./cert/localhost-client.pem'),
-    ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem')
-};
+function reqWithKey(file_path, file2_path){
+    let options2 = {
+        hostname: 'localhost',
+        port: 3000,
+        path: '/',
+        method: 'GET',
+        // cert: fs.readFileSync('./cert/localhost-client.pem'),
+        // key: fs.readFileSync('./cert/localhost-client-key.pem'),
+        cert: fs.readFileSync(file_path),
+        key: fs.readFileSync(file2_path),
+        ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem')
+    };
+    callback = function(res) {
+        console.log("Client A statusCode: ", res.statusCode);
+        console.log("Client A headers: ", res.headers);
+        // console.log("Server Host Name: "+ res.connection.getPeerCertificate());
+        // console.log(res.connection.getPeerCertificate().subject.O);
+        res.on('data', function(d) {
+            process.stdout.write("responddata\n");
+            process.stdout.write("");
+        });
+    };
 
-callback = function(res) {
-    console.log("Client A statusCode: ", res.statusCode);
-    console.log("Client A headers: ", res.headers);
-    // console.log("Server Host Name: "+ res.connection.getPeerCertificate());
-    // console.log(res.connection.getPeerCertificate().subject.O);
-    res.on('data', function(d) {
-        process.stdout.write("data");
+    var req1 = https.request(options2, callback);
+    req1.end();
+
+    req1.on('error', function(e) {
+        console.error(e);
     });
-};
-
-https.request(options2, callback).end();
+}

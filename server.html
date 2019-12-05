@@ -7,29 +7,64 @@
     </head>
     <body>
         <div id="app" class="container">
+            <div id="overlay" v-show="uploading" v-cloak>
+                <div class="overlay-content">
+                    <h4 class="header">Uploading...</h4>
+                    <progress-bar :progress="progress" progress-complete-text="Upload Complete!"></progress-bar>
+
+                    <button class="btn btn-danger" @click="cancelUpload">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+
             <div>
-                <h5>Server chat</h5>
+                <div class="form-group">
+                    <upload-input @file-chosen="setFile"></upload-input>
+                    <upload-input @file-chosen="setFile2"></upload-input>
+                </div>
 
-                <!-- Chat Box goes here -->
-                <div class="columns">
-                    <div class="column is-two-thirds">
+                <div class="form-group">
+                    <button class="btn btn-primary" @click="uploadFile">
+                        Upload File
+                    </button>
+                </div>
 
-                        <!-- message list -->
-                        <transition name="slide-fade">
-                            <div class="box">
-                                <div class="messages">
-                                    <ul>
-                                        <li v-for="message in messages">
-                                            <message v-bind:message-data="message"></message>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
+                <div class="alert alert-success"  v-show="uploadStatus==='complete'"  v-cloak>
+                    Upload Complete!
+                </div>
+
+                <div class="alert alert-danger"  v-show="uploadStatus==='cancelled'"  v-cloak>
+                    Upload Canclled
                 </div>
             </div>
         </div>
+
+        <template id="upload-input">
+            <div>
+                <!-- PRETTY FILE INPUT HIDDEN -->
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Choose File..." :value="file.name" readonly>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" @click="launchFilePicker"><span class="glyphicon glyphicon-paperclip" aria-hidden="true"></span></button>
+                    </span>
+                </div>
+
+                <!-- REAL FILE INPUT HIDDEN -->
+                <input type="file" style="display:none" ref="file" v-uploader />
+            </div>
+        </template>
+        <template id="progress-bar">
+            <div class="progress">
+                <div class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" :style="{width: getProgress}">
+                    <span v-if="progress < 100 && showProgressText">
+                        {{getProgress}}
+                    </span>
+                    <span v-if="progress >= 100 && showProgressText">{{progressCompleteText}}</span>
+                </div>
+            </div>
+        </template>
+
         <script src="https://unpkg.com/vue"></script>
         <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>

@@ -1,57 +1,111 @@
 (function() {
     var socket = io('https://localhost:3000');
-
-    // Message Component
-    Vue.component('message', {
-        props: ['messageData'],
-        template: ` <div class="media-content">
-                        <div class="content">
-                            <p>
-                                <strong>{{messageData.user}}</strong> <small>{{messageData.date}}</small>
-                                <br>
-                                {{messageData.text}}
-                            </p>
-                        </div>
-                    </div>`
-    });
-
-    // Vue instance
-    var app = new Vue({
-        el: '#app',
-        data: {
-            messages: []
+    Vue.component('upload-input', {
+        template: '#upload-input',
+        directives: {
+            uploader: {
+                bind(el, binding, vnode) {
+                    el.addEventListener('change', e => {
+                        if(e.target.files[0] !== undefined){
+                            vnode.context.file = e.target.files[0];
+                        }
+                    });
+                }
+            },
         },
-        methods: {
-            scrollToEnd: function() {
-                var container = this.$el.querySelector('.messages');
-                container.scrollTop = container.scrollHeight;
+        watch: {
+            file(val) {
+                this.$emit('file-chosen', val);
             }
         },
-        created: function () {
-            // initialize existing messages
-            this.$http.get('/messages').then(response => {
-                if(response.status === 200){
-                    this.messages = response.body;
-                }
-            }).catch((err)=>{
-                if(err.status === 401){
-                    alert("couldn't get messages");
-                }
-            });
+        methods: {
+            launchFilePicker() {
+                this.$refs.file.click();
+            }
         },
-        updated() {
-            this.scrollToEnd();
+        data() {
+            return {
+                file: ''
+            }
         }
     });
 
-
-    /**Client Socket events**/
-
-    // When the server emits a message, the client updates message list
-    socket.on('read-msg', function(message) {
-        app.messages.push({ text: message.text, user: message.user, date: message.date });
+    Vue.component('progress-bar', {
+        template: '#progress-bar',
+        props: {
+            progress: {
+                default: 0,
+                type: Number
+            },
+            showProgressText: {
+                default: true,
+                type: Boolean
+            },
+            progressCompleteText: {
+                default: 'Complete!',
+                type: String
+            }
+        },
+        computed: {
+            getProgress() {
+                return Math.round(this.progress) + "%";
+            }
+        },
+        watch: {
+            progress(progress) {
+                this.currentProgress = progress;
+            }
+        },
+        data() {
+            return {
+                currentProgress: 0
+            }
+        }
     });
-    socket.on('init-chat', function(messages) {
-        app.messages = messages;
+
+    new Vue({
+        el: '#app',
+        methods: {
+            setFile(file) {
+                this.file = file;
+            },
+            setFile2(file2) {
+                this.file2 = file2;
+            },
+            cancelUpload() {
+                this.request.abort();
+            },
+            uploadFile() {
+                let formData = new FormData();
+                // let formData2 = new FormData();
+                formData.append('file', this.file);
+                formData.append('file2', this.file2);
+                this.uploading=true;
+                this.uploadStatus = "";
+                this.$http.post('/echo/json/', formData, {
+                    before: request => {
+                        this.request = request;
+                    },
+                    progress: e => {
+                        this.progress = (e.loaded / e.total) * 100;
+                    }
+                }).then(response => {
+                    this.uploadStatus = "complete"
+                    this.uploading = false;
+                }, error => {
+                    this.progress = 0;
+                    this.uploading = false;
+                    this.uploadStatus = "cancelled"
+                });
+            }
+        },
+        data: {
+            file: '',
+            file2: '',
+            progress: 0,
+            uploading:  false,
+            uploadStatus: ''
+        }
     });
+
 })();
