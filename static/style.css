@@ -35,30 +35,43 @@ body {
 }
 
 .messages{
+    display: block;
+    margin: 3px auto;
+    width: 100%;
     min-height: 50px;
-    background-color: aliceblue;
+    background-color: #79a7d0;
     padding-top: 10px;
-    border-style: solid;
-    border-width: 0 0 10px 0;
-    border: #35829e;
+    border: none;
 }
 
 #inputMessage{
+    display: block;
+    margin: 2px auto;
     width: 100%;
+    padding: 3px;
     border-style: solid;
-    border-width: 1px 0;
-    border-color: #35829e;
+    border-width: 1px;
+    border-color: #337ab7a8;
+    border-radius: 3px;
 }
 
 #chat-window{
-    border: #35829e;
-    border-radius: 2px;
+    border-color: #79a7d0;
+    border-radius: 3px;
     border-style: solid;
+    border-width: 2px;
+    background-color: #337ab7a8;
 }
 
 #sendMsgButton{
+    display: block;
+    margin: 0 auto;
+    padding: 3px;
+    FONT-WEIGHT: 500;
+    position: relative;
     width: 100%;
-    background-color: #35829e;
+    border-radius: 5px;
+    background-color: #337abe;
     color: white;
     border: none;
 }

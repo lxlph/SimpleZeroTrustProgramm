@@ -2,6 +2,7 @@
     const socket = io('https://localhost:3000');
     let clientUsername = "anonymous";
     let allMessages = [];
+    console.log(sessionStorage);
 
     const NotFound = { template: '<p>Page not found</p>' }
     const ClieChatView = {
@@ -123,20 +124,22 @@
             `,
         methods: {
             login: function(email, password){
-                localStorage.email = email;
-                localStorage.password = password;
-                console.log("Login");
+                sessionStorage.email = email;
+                sessionStorage.password = password;
+                console.log(email)
+                console.log(password)
                 this.$http.post('/login', { email: email, password: password}).then( response =>{
                     clientUsername = email;
+                    console.log(response.status);
                     if(response.status === 206){
                         return router.push('otp');
                     } else if(response.status === 200) {
-                        localStorage.clear();
-                        localStorage.loggedin = true;
+                        sessionStorage.clear();
+                        sessionStorage.loggedin = true;
                         return router.push('setup');
                     }
                 }).catch(err => {
-                    alert("Invalid creds");
+                    alert("Here: Invalid creds");
                 });
             }
         },
@@ -170,13 +173,13 @@
                     }
                 }
                 const payload = {
-                    email: localStorage.email,
-                    password: localStorage.password
+                    email: sessionStorage.email,
+                    password: sessionStorage.password
                 }
                 this.$http.post('/login', payload, options).then((response)=>{
                     if(response.status === 200){
-                        localStorage.clear();
-                        localStorage.loggedin = true;
+                        sessionStorage.clear();
+                        sessionStorage.loggedin = true;
                         return router.push('setup');
                     }
                     alert('Invalid creds');
@@ -239,7 +242,8 @@
             confirm: function(otp){
                 if(clientUsername == "reader.only@gmail.com"){
                     this.pageredirect = "/cliechatreader";
-                }else{
+                }
+                else{
                     this.pageredirect = "/cliechatview";
                 }
                 const body = {
@@ -326,6 +330,7 @@
             }
         }
     });
+    let auth = false;
     const routes = [
         { path: '/cliechatview', component: ClieChatView },
         { path: '/cliechatreader', component: ClieChatReader },
@@ -334,11 +339,28 @@
         { path: '/setup', component: Setup }
     ];
     const router = new VueRouter({
+        // mode: 'history',
+        // base: process.env.BASE_URL,
         routes // short for `routes: routes`
     });
-    var app = new Vue({
+
+    router.beforeEach((to, from, next) => {
+        if (to.fullPath != '/login') {
+            if (sessionStorage.loggedin=="true") {
+                next();
+            }
+            else{
+                alert("Please login first");
+                next('/login');
+            }
+        }else{
+            next();
+        }
+    });
+
+    new Vue({
         el: '#app',
-        router
+        router,
     });
     socket.on('read-msg', function(message) {
         allMessages.push({ text: message.text, user: message.user, date: message.date });
