@@ -89,6 +89,9 @@
                         this.progress = (e.loaded / e.total) * 100;
                     }
                 }).then(response => {
+                    if(response.status === 206){
+                        alert(response.body);
+                    }
                     this.uploadStatus = "complete"
                     this.uploading = false;
                 }, error => {

@@ -9,23 +9,30 @@ const fs = require('fs');
 const dateFormat = require('dateformat');
 const formidableMiddleware = require('express-formidable');
 
-let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
-let users = jsonParsed.users;
+//array for all messages which where sent
 let messages = [];
+//every user has an id
 let id = 0;
-let autho = false;
+//parse fileName.json which contains all users with their passwords
+let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
+//create an array of all users
+let users = jsonParsed.users;
+//variable which check whether the device is already authenticated
+let deviceAutorized = false;
 
 //get userid by email
 function getIdByEmail (email){
     var id = -1;
     users.forEach(function (user) {
         if(user.email == email){
-           id = user.id;
+            id = user.id;
         }
     });
     return id;
 }
 
+//set some configurations for app
+app.use("/static", express.static('./static/'));
 app.use(bodyParser.json());
 
 //login API supports both, normal auth + 2fa
@@ -86,7 +93,7 @@ app.get('/twofactor/setup', function(req, res){
     res.json(users[id].twofactor);
 });
 
-//get message
+//get messages
 app.get('/messages', function(req, res){
     res.json(messages);
 });
@@ -111,49 +118,36 @@ app.post('/twofactor/verify', function(req, res){
     return res.status(400).send('Invalid token, verification failed');
 });
 
-//EXPL: Front-end app
+//ppload page
 app.get('/', function(req, res){
-    // console.log(req.client.authorized);
-    // console.log(new Date()+' '+
-    //     req.connection.remoteAddress+' '+
-    //     // req.socket.getPeerCertificate().subject.CN+' '+
-    //     req.method+' '+req.url);
-    // if(req.client.authorized){
-    //     console.log("autho works");
-    //     res.redirect('client?');
-    // }
-    // else{
-    //     console.log("autho does not work");
-    //     res.sendFile(path.join(__dirname+'/uploadFiles.html'));
-    // }
     res.sendFile(path.join(__dirname+'/uploadFiles.html'));
 });
+
+//client page
 app.get('/client', function(req, res){
+    const cert = req.connection.getPeerCertificate();
     if(req.client.authorized){
-        autho = true;
-    }else if(autho){
+        deviceAutorized = true;
+        res.send(`Success! Your certificate was issued by ${cert.issuer.O}!`)
+    }
+    else if(deviceAutorized){
         res.sendFile(path.join(__dirname + '/client.html'));
+        // res.send(`Already authenticated device`)
+    }
+    else if (cert.subject) {
+        console.log(cert);
+        res.send(`Sorry, certificates from ${cert.issuer.O} are not welcome here.`)
     }
     else{
-        res.status(401)
-            .send(`Sorry, but you need to provide a client certificate to continue. 
+        res.send(`Sorry, but you need to provide a client certificate to continue. 
                     Please go back to "Upload page"`);
 
     }
 });
 
-let options = {
-    key: fs.readFileSync('./cert/server-key.pem'),
-    cert: fs.readFileSync('./cert/server-crt.pem'),
-    ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem'),
-    requestCert: true,
-    rejectUnauthorized: false
-};
-
-//change body parser for uploading files with formData
+//change body parser for uploading files with formData (needed for upload)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(formidableMiddleware());
-app.use("/static", express.static('./static/'));
 
 //uploading files
 app.post('/upload', function (req, res) {
@@ -162,46 +156,36 @@ app.post('/upload', function (req, res) {
         res.sendStatus(400);
     }
     else{
-        reqWithKey(req.files.file.path, req.files.file2.path);
-        res.sendStatus(200);
+        function callback(alertInfo){
+            return res.status(206).send(alertInfo);
+        }
+        reqWithKey(req.files.file.path, req.files.file2.path, callback);
+
     }
 });
-
-// app.get('/authenticate', (req, res) => {
-//     const cert = req.connection.getPeerCertificate()
-//     console.log(req.client.authorized);
-//     console.log(cert.subject.O);
-//     if (req.client.authorized) {
-//         // res.send(`Hello ${cert.subject.CN}, your certificate was issued by ${cert.issuer.CN}!`)
-//         autorized = true;
-//     } else if (cert.subject) {
-//         res.status(403)
-//             // .send(`Sorry ${cert.subject.CN}, certificates from ${cert.issuer.CN} are not welcome here.`)
-//     } else {
-//         res.status(401)
-//             .send(`Sorry, but you need to provide a client certificate to continue.`)
-//     }
-//     res.end();
-// });
-//
 
 /**
  * start server
  */
-const server = https.createServer(options, app);
+let optionsServer = {
+    key: fs.readFileSync('./cert/server-key.pem'),
+    cert: fs.readFileSync('./cert/server-crt.pem'),
+    ca: fs.readFileSync('./cert/local-root-CA/rootCA.pem'),
+    requestCert: true,
+    rejectUnauthorized: false
+};
+const server = https.createServer(optionsServer, app);
 const io = require('socket.io')(server);
 server.listen(3000, function() {
     console.log('server up and running at 3000 port');
 });
 
+//socket connections
 io.on('connection', function(socket) {
-
+    //init chat with message which were sent already
     socket.emit('init-chat', messages);
 
-    socket.on('logmsg', function(msg) {
-        console.log(msg);
-    });
-
+    //if the server receives a message then it saves it in the messages array and inform all clients
     socket.on('send-msg', function(data) {
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
         messages.push(newMessage);
@@ -209,30 +193,28 @@ io.on('connection', function(socket) {
     });
 });
 
-function reqWithKey(file_path, file2_path){
-    let options2 = {
+//function to start a http request with the uploaded certificate to authenticate the device
+function reqWithKey(file_path, file2_path, callback2){
+    let optionsClient = {
         hostname: 'localhost',
         port: 3000,
         path: '/client',
         method: 'GET',
-        // cert: fs.readFileSync('./cert/localhost-client.pem'),
-        // key: fs.readFileSync('./cert/localhost-client-key.pem'),
         cert: fs.readFileSync(file_path),
         key: fs.readFileSync(file2_path),
-        ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\rootCA.pem')
+        ca: fs.readFileSync('./cert/local-root-CA/rootCA.pem')
+        // cert: fs.readFileSync('./cert/localhost-client.pem'),
+        // key: fs.readFileSync('./cert/localhost-client-key.pem'),
+        // ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\test\\rootCA.pem')
     };
     callback = function(res) {
-        console.log("Client A statusCode: ", res.statusCode);
-        console.log("Client A headers: ", res.headers);
-        // console.log("Server Host Name: "+ res.connection.getPeerCertificate());
-        // console.log(res.connection.getPeerCertificate().subject.O);
-        res.on('data', function(d) {
-            process.stdout.write("responddata\n");
-            process.stdout.write("");
+        res.on('data', function(data) {
+            process.stdout.write(data);
+            callback2(data);
         });
     };
 
-    var req1 = https.request(options2, callback);
+    var req1 = https.request(optionsClient, callback);
     req1.end();
 
     req1.on('error', function(e) {

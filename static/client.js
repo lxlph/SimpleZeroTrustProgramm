@@ -1,11 +1,9 @@
 (function() {
     const socket = io('https://localhost:3000');
-    let clientUsername = "anonymous";
     let allMessages = [];
-    console.log(sessionStorage);
 
     const NotFound = { template: '<p>Page not found</p>' }
-    const ClieChatView = {
+    const ClieChat = {
         template: `
                     <div>
                         <h5>Hello {{user}}! Your chat window:</h5>
@@ -30,7 +28,7 @@
         methods: {
             sendMessage: function(message) {
                 if (message) {
-                    socket.emit('send-msg', { message: message, user: clientUsername });
+                    socket.emit('send-msg', { message: message, user: sessionStorage.email });
                 }
             }
 
@@ -50,7 +48,7 @@
         },
         data: function(){
             return{
-                user: clientUsername,
+                user: sessionStorage.email,
                 messages: []
             }
         },
@@ -70,7 +68,6 @@
                                                 </li>
                                             </ul>
                                         </div>
-                                        <!--<input-message v-on:send-message="sendMessage"></input-message>-->
                                     </div>
                                 </transition>
                             </div>
@@ -80,7 +77,7 @@
         methods: {
             sendMessage: function(message) {
                 if (message) {
-                    socket.emit('send-msg', { message: message, user: clientUsername });
+                    socket.emit('send-msg', { message: message, user: sessionStorage.email });
                 }
             }
 
@@ -100,7 +97,7 @@
         },
         data: function(){
             return{
-                user: clientUsername,
+                user: sessionStorage.email,
                 messages: []
             }
         },
@@ -126,15 +123,13 @@
             login: function(email, password){
                 sessionStorage.email = email;
                 sessionStorage.password = password;
-                console.log(email)
-                console.log(password)
                 this.$http.post('/login', { email: email, password: password}).then( response =>{
-                    clientUsername = email;
-                    console.log(response.status);
+                    sessionStorage.email = email;
                     if(response.status === 206){
                         return router.push('otp');
                     } else if(response.status === 200) {
                         sessionStorage.clear();
+                        sessionStorage.email = email;
                         sessionStorage.loggedin = true;
                         return router.push('setup');
                     }
@@ -178,7 +173,9 @@
                 }
                 this.$http.post('/login', payload, options).then((response)=>{
                     if(response.status === 200){
+                        let email = sessionStorage.email;
                         sessionStorage.clear();
+                        sessionStorage.email = email;
                         sessionStorage.loggedin = true;
                         return router.push('setup');
                     }
@@ -197,7 +194,7 @@
                         <img :src="twofactor.dataURL" alt="..." class="img-thumbnail">
                         <p>Secret - {{twofactor.secret || twofactor.tempSecret}}</p>
                         <p>Type - TOTP</p>
-                        <p><router-link :to="pageredirect">Go to Chat</router-link></p>
+                        <p><router-link to="/cliechat">Go to Chat</router-link></p>
                     </div>
                     <div v-if="!twofactor.secret">
                         <h3>Setup Otp</h3>
@@ -240,12 +237,6 @@
             },
             /** Verify the otp once to enable 2fa*/
             confirm: function(otp){
-                if(clientUsername == "reader.only@gmail.com"){
-                    this.pageredirect = "/cliechatreader";
-                }
-                else{
-                    this.pageredirect = "/cliechatview";
-                }
                 const body = {
                     token: otp
                 }
@@ -254,6 +245,8 @@
                     if(response.status === 200){
                         this.twofactor.secret = this.twofactor.tempSecret;
                         this.twofactor.tempSecret = "";
+                        sessionStorage.verified = true;
+                        router.push("/cliechat");
                     }
                 }).catch(err=>alert('invalid otp'));
             },
@@ -330,31 +323,44 @@
             }
         }
     });
-    let auth = false;
+
     const routes = [
-        { path: '/cliechatview', component: ClieChatView },
+        { path: '/cliechat', component: ClieChat },
         { path: '/cliechatreader', component: ClieChatReader },
         { path: '/login', component: Login },
         { path: '/otp', component: Otp },
         { path: '/setup', component: Setup }
     ];
     const router = new VueRouter({
-        // mode: 'history',
-        // base: process.env.BASE_URL,
         routes // short for `routes: routes`
     });
 
     router.beforeEach((to, from, next) => {
-        if (to.fullPath != '/login') {
-            if (sessionStorage.loggedin=="true") {
-                next();
+        //logic which checks whether the user ist really logged in and verified
+        if (to.fullPath === ('/cliechat'|| '/cliechatreader')) {
+            if((sessionStorage.loggedin==="true" && sessionStorage.verified ==="true")
+                && sessionStorage.email!==null ){
+                if(sessionStorage.email === 'reader.only@gmail.com'){
+                    next('/cliechatreader');
+                }else{
+                    next();
+                }
             }
             else{
+                alert("Please log in and verify with otp!");
+                next('/login');
+            }
+        }
+        else if(sessionStorage.loggedin==="true"){
+            next();
+        }
+        else {
+            if (to.fullPath === '/login') {
+                next();
+            }else {
                 alert("Please login first");
                 next('/login');
             }
-        }else{
-            next();
         }
     });
 
