@@ -15,30 +15,9 @@
 :: You should have received a copy of the GNU General Public License
 :: along with SimpleZeroTrustProgram.  If not, see <https://www.gnu.org/licenses/>.
 
-@echo off
-call cleanCerts.bat
+cd cert\
+call generateCertsWithMkcert.bat
+cd OtherCerts\
+call generateOtherCerts.bat
 
-@echo on
-echo ============= set path of the local root CA =============
-set CAROOT=%cd%\local-root-CA
-
-echo ============= install root CA =============
-mkcert -install
-
-echo ============= create server certificate =============
-mkcert localhost 127.0.0.1 ::1
-
-echo ============= rename cert and key to server-key.pem and server-crt.pem =============
-ren localhost+2.pem server-crt.pem
-ren localhost+2-key.pem server-key.pem
-
-echo ============= create client certificates =============
-mkcert -client client1
-
-echo ============= rename cert and key to server-key.pem and server-crt.pem =============
-ren client1-client.pem client1-crt.pem
-ren client1-client-key.pem client1-key.pem
-
-:: echo ============= finished =============
 pause
-
