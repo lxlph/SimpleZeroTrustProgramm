@@ -1,11 +1,12 @@
 {"users":
-  [{
-    "id": 0,
-    "firstName": "John",
-    "lastName": "Doe",
-    "email": "john.doe@gmail.com",
-    "password": "test"
-  },
+  [
+    {
+      "id": 0,
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@gmail.com",
+      "password": "test"
+    },
     {
       "id": 1,
       "firstName": "Jane",

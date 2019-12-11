@@ -1,7 +1,17 @@
+/**
+ *
+ * code for the client page of the chatapp
+ */
+
 (function() {
+    //load socket
     const socket = io('https://localhost:3000');
+    //array of all messages
     let allMessages = [];
 
+/*
+    define some router-views as constants
+*/
     const NotFound = { template: '<p>Page not found</p>' }
     const ClieChat = {
         template: `
@@ -26,13 +36,14 @@
                     </div>
             `,
         methods: {
+            //send new message to server
             sendMessage: function(message) {
                 if (message) {
                     socket.emit('send-msg', { message: message, user: sessionStorage.email });
                 }
             }
-
         },
+        //start function
         created: function (messages) {
             // initialize existing messages
             this.$http.get('/messages').then(response => {
@@ -74,14 +85,7 @@
                         </div>
                     </div>
             `,
-        methods: {
-            sendMessage: function(message) {
-                if (message) {
-                    socket.emit('send-msg', { message: message, user: sessionStorage.email });
-                }
-            }
-
-        },
+        //start function
         created: function (messages) {
             // initialize existing messages
             this.$http.get('/messages').then(response => {
@@ -120,6 +124,7 @@
                     </form>
             `,
         methods: {
+            //login with http.post
             login: function(email, password){
                 sessionStorage.email = email;
                 sessionStorage.password = password;
@@ -128,9 +133,11 @@
                     if(response.status === 206){
                         return router.push('otp');
                     } else if(response.status === 200) {
+                        let verified = sessionStorage.verified;
                         sessionStorage.clear();
                         sessionStorage.email = email;
                         sessionStorage.loggedin = true;
+                        sessionStorage.verified = verified;
                         return router.push('setup');
                     }
                 }).catch(err => {
@@ -161,6 +168,7 @@
             }
         },
         methods: {
+            //submit (otp code)
             login: function(otp){
                 const options = {
                     headers: {
@@ -177,6 +185,7 @@
                         sessionStorage.clear();
                         sessionStorage.email = email;
                         sessionStorage.loggedin = true;
+                        sessionStorage.verified = true;
                         return router.push('setup');
                     }
                     alert('Invalid creds');
@@ -285,6 +294,9 @@
         }
     }
 
+/*
+    define some components
+*/
     // Message Component
     Vue.component('message', {
         props: ['messageData'],
@@ -324,6 +336,9 @@
         }
     });
 
+/*
+    define routes and load them
+*/
     const routes = [
         { path: '/cliechat', component: ClieChat },
         { path: '/cliechatreader', component: ClieChatReader },
@@ -335,10 +350,11 @@
         routes // short for `routes: routes`
     });
 
+    //authorisation: before a router could be load, some conditions have to be checked
     router.beforeEach((to, from, next) => {
-        //logic which checks whether the user ist really logged in and verified
         if (to.fullPath === ('/cliechat'|| '/cliechatreader')) {
-            if((sessionStorage.loggedin==="true" && sessionStorage.verified ==="true")
+            if((sessionStorage.loggedin==="true"
+                && sessionStorage.verified ==="true")
                 && sessionStorage.email!==null ){
                 if(sessionStorage.email === 'reader.only@gmail.com'){
                     next('/cliechatreader');
@@ -364,13 +380,22 @@
         }
     });
 
+/*
+    start vue
+*/
     new Vue({
         el: '#app',
         router,
     });
+
+/*
+    socket functions
+*/
+    //server has sent a new message, which should be pushed to the messages array
     socket.on('read-msg', function(message) {
         allMessages.push({ text: message.text, user: message.user, date: message.date });
     });
+    //get all messages when the client starts
     socket.on('init-chat', function(messages) {
         allMessages = messages;
     });

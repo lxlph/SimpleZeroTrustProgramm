@@ -1,3 +1,8 @@
+/**
+ *
+ * code for the server of the chatapp
+ */
+
 const express = require('express');
 const app = express();
 const https = require('https');
@@ -13,12 +18,12 @@ const formidableMiddleware = require('express-formidable');
 let messages = [];
 //every user has an id
 let id = 0;
-//parse fileName.json which contains all users with their passwords
+//parse fileName.json which contains all users with their mails and their passwords
 let jsonParsed = JSON.parse(fs.readFileSync('fileName.json').toString());
 //create an array of all users
 let users = jsonParsed.users;
 //variable which check whether the device is already authenticated
-let deviceAutorized = false;
+let deviceVerified = false;
 
 //get userid by email
 function getIdByEmail (email){
@@ -126,19 +131,17 @@ app.get('/', function(req, res){
 //client page
 app.get('/client', function(req, res){
     const cert = req.connection.getPeerCertificate();
-    if(req.client.authorized){
-        deviceAutorized = true;
+    if(req.client.authorized){ //client certificate issued from the right CA
+        deviceVerified = true;
         res.send(`Success! Your certificate was issued by ${cert.issuer.O}!`)
     }
-    else if(deviceAutorized){
+    else if(deviceVerified){ //device is already verified, go to client page
         res.sendFile(path.join(__dirname + '/client.html'));
-        // res.send(`Already authenticated device`)
     }
-    else if (cert.subject) {
-        console.log(cert);
+    else if (cert.subject) {    //certificate issued from the wrong CA
         res.send(`Sorry, certificates from ${cert.issuer.O} are not welcome here.`)
     }
-    else{
+    else{   //no valid certificate was uploaded
         res.send(`Sorry, but you need to provide a client certificate to continue. 
                     Please go back to "Upload page"`);
 
@@ -151,16 +154,18 @@ app.use(formidableMiddleware());
 
 //uploading files
 app.post('/upload', function (req, res) {
-    //check whether files were really sent
+    //no or wrong files were really sent
     if(Object.keys(req.files).length < 2 && req.files.constructor === Object){
         res.sendStatus(400);
     }
     else{
+        //callback function after the http request,
+        //which send some information to the client,
+        //whether the upload of the client certificate is valid
         function callback(alertInfo){
             return res.status(206).send(alertInfo);
         }
         reqWithKey(req.files.file.path, req.files.file2.path, callback);
-
     }
 });
 
@@ -168,9 +173,15 @@ app.post('/upload', function (req, res) {
  * start server
  */
 let optionsServer = {
+    //comment out which certificates should be used
+    //mkcert certificates
     key: fs.readFileSync('./cert/server-key.pem'),
     cert: fs.readFileSync('./cert/server-crt.pem'),
     ca: fs.readFileSync('./cert/local-root-CA/rootCA.pem'),
+/*    // self-signed certificates
+    key: fs.readFileSync('./cert/OtherCerts/otherserver.key'),
+    cert: fs.readFileSync('./cert/OtherCerts/otherserver.crt'),
+    ca: fs.readFileSync('./cert/OtherCerts/otherca-crt.pem'),*/
     requestCert: true,
     rejectUnauthorized: false
 };
@@ -185,7 +196,7 @@ io.on('connection', function(socket) {
     //init chat with message which were sent already
     socket.emit('init-chat', messages);
 
-    //if the server receives a message then it saves it in the messages array and inform all clients
+    //if the server receives a message then it pushes it to the messages array and inform all clients
     socket.on('send-msg', function(data) {
         var newMessage = { text : data.message, user : data.user, date : dateFormat(new Date(), 'shortTime') };
         messages.push(newMessage);
@@ -203,13 +214,12 @@ function reqWithKey(file_path, file2_path, callback2){
         cert: fs.readFileSync(file_path),
         key: fs.readFileSync(file2_path),
         ca: fs.readFileSync('./cert/local-root-CA/rootCA.pem')
-        // cert: fs.readFileSync('./cert/localhost-client.pem'),
-        // key: fs.readFileSync('./cert/localhost-client-key.pem'),
-        // ca: fs.readFileSync('C:\\Users\\linh-\\AppData\\Local\\mkcert\\test\\rootCA.pem')
+        // cert: fs.readFileSync('./cert/client1-crt.pem'),
+        // key: fs.readFileSync('./cert/client1-key.pem'),
     };
     callback = function(res) {
         res.on('data', function(data) {
-            process.stdout.write(data);
+            // process.stdout.write(data);
             callback2(data);
         });
     };

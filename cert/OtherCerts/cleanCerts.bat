@@ -20,3 +20,6 @@ echo ============= delete *pem, *pfx, *srl files =============
 rm *.pem
 rm *.pfx
 rm *.srl
+rm *.crt
+rm *.key
+rm *.csr

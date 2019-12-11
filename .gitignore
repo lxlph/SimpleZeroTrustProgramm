@@ -69,3 +69,7 @@ typings/
 .next
 cert/local-root-CA/
 *.pem
+*.key
+*.srl
+*.crt
+*.csr

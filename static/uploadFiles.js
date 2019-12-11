@@ -1,5 +1,16 @@
+/**
+ *
+ * code for the upload page of the chatapp
+ */
+
 (function() {
-    var socket = io('https://localhost:3000');
+    //load socket
+    const socket = io('https://localhost:3000');
+
+/*
+    define some components
+*/
+    //upload component for a file
     Vue.component('upload-input', {
         template: '#upload-input',
         directives: {
@@ -30,6 +41,7 @@
         }
     });
 
+    //progress bar component to show the progress of the upload
     Vue.component('progress-bar', {
         template: '#progress-bar',
         props: {
@@ -63,18 +75,25 @@
         }
     });
 
+/*
+    start Vue
+*/
     new Vue({
         el: '#app',
         methods: {
+            //set certificate file
             setFile(file) {
                 this.file = file;
             },
+            //set key file
             setFile2(file2) {
                 this.file2 = file2;
             },
+            //abort upload
             cancelUpload() {
                 this.request.abort();
             },
+            //upload certificate and key files, check with the server, whether they are valid
             uploadFile() {
                 let formData = new FormData();
                 formData.append('file', this.file);

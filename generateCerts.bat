@@ -15,9 +15,11 @@
 :: You should have received a copy of the GNU General Public License
 :: along with SimpleZeroTrustProgram.  If not, see <https://www.gnu.org/licenses/>.
 
+REM This programm generates all necessary certificates which are needed for the chatapp
+
 cd cert\
 call generateCertsWithMkcert.bat
 cd OtherCerts\
-call generateOtherCerts.bat
-
+call generateOtherCertsWithOpenSLL.bat
+echo FINISH
 pause
