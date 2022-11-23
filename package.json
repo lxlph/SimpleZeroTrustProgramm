@@ -15,7 +15,7 @@
     "express": "^4.15.4",
     "express-formidable": "^1.2.0",
     "qrcode": "^0.9.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.5.0",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {
